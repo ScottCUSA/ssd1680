@@ -1,13 +1,13 @@
 //! B/W Color for EPDs
 
-#[cfg(feature = "graphics")]
+#[cfg(feature = "displays")]
 use embedded_graphics::pixelcolor::BinaryColor;
 
-#[cfg(feature = "graphics")]
+#[cfg(feature = "displays")]
 pub use BinaryColor::Off as Black;
-#[cfg(feature = "graphics")]
+#[cfg(feature = "displays")]
 pub use BinaryColor::On as White;
-#[cfg(feature = "graphics")]
+#[cfg(feature = "displays")]
 pub use BinaryColor::On as Red;
 
 /// Black/White colors
@@ -78,7 +78,7 @@ mod tests {
     // test all values aside from 0 and 1 which all should panic
     #[test]
     fn from_u8_panic() {
-        for val in 2..=u8::max_value() {
+        for val in 2..=u8::MAX {
             extern crate std;
             let result = std::panic::catch_unwind(|| Color::from(val));
             assert!(result.is_err());

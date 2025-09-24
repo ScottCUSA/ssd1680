@@ -18,10 +18,11 @@ license = "MIT OR Apache-2.0"
 embedded-hal = "1.0.0"
 embedded-graphics = { version = "0.8.1", optional = true }
 display-interface = "0.5.0"
+log = "0.4.28"
 
 [features]
-default = ["graphics"]
-graphics = ["embedded-graphics"]
+default = ["displays"]
+displays = ["embedded-graphics"]
 
 [profile.release]
 lto = true
