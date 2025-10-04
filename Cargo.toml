@@ -21,8 +21,8 @@ display-interface = "0.5.0"
 log = "0.4.28"
 
 [features]
-default = ["displays"]
-displays = ["embedded-graphics"]
+default = ["graphics"]
+graphics = ["embedded-graphics"]
 
 [profile.release]
 lto = true

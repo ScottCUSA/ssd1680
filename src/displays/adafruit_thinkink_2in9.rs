@@ -64,16 +64,16 @@ pub const TI_290_MONOFULL_LUT_CODE: [u8; 156] = [
 make_new_display_driver!();
 
 /// Display for a 129x296 panel (2.9in rotated)
-pub struct ThinkInkMono2in9 {
+pub struct ThinkInk2in9Mono {
     buffer: [u8; buffer_len(WIDTH as usize, HEIGHT as usize)],
     rotation: DisplayRotation,
     is_inverted: bool,
 }
 
-impl Default for ThinkInkMono2in9 {
+impl Default for ThinkInk2in9Mono {
     /// Create a black & white buffer for the 2.9in display
     fn default() -> Self {
-        ThinkInkMono2in9 {
+        ThinkInk2in9Mono {
             buffer: [Color::White.get_byte_value(); buffer_len(WIDTH as usize, HEIGHT as usize)],
             rotation: DisplayRotation::Rotate270,
             is_inverted: false,
@@ -81,7 +81,7 @@ impl Default for ThinkInkMono2in9 {
     }
 }
 
-impl DrawTarget for ThinkInkMono2in9 {
+impl DrawTarget for ThinkInk2in9Mono {
     type Error = DisplayError;
     type Color = BinaryColor;
 
@@ -96,7 +96,7 @@ impl DrawTarget for ThinkInkMono2in9 {
     }
 }
 
-impl OriginDimensions for ThinkInkMono2in9 {
+impl OriginDimensions for ThinkInk2in9Mono {
     fn size(&self) -> Size {
         match self.rotation() {
             DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
@@ -109,7 +109,7 @@ impl OriginDimensions for ThinkInkMono2in9 {
     }
 }
 
-impl Display for ThinkInkMono2in9 {
+impl Display for ThinkInk2in9Mono {
     fn buffer(&self) -> &[u8] {
         &self.buffer
     }
@@ -133,7 +133,7 @@ impl Display for ThinkInkMono2in9 {
 
 #[cfg(test)]
 mod tests {
-    use super::{Display, DisplayRotation, ThinkInkMono2in9};
+    use super::{Display, DisplayRotation, ThinkInk2in9Mono};
     use crate::color::Black;
     use crate::color::Color;
     use crate::displays::find_position;
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn buffer_clear() {
-        let mut display = ThinkInkMono2in9::default();
+        let mut display = ThinkInk2in9Mono::default();
 
         for &byte in display.buffer().iter() {
             assert_eq!(byte, Color::White.get_byte_value());
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn graphics_rotation_0() {
-        let mut display = ThinkInkMono2in9::default();
+        let mut display = ThinkInk2in9Mono::default();
         display.set_rotation(DisplayRotation::Rotate0);
 
         let _ = Line::new(Point::new(0, 0), Point::new(7, 0))

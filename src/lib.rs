@@ -30,7 +30,7 @@
 
 mod cmd;
 pub mod color;
-#[cfg(feature = "displays")]
+#[cfg(feature = "graphics")]
 pub mod displays;
 pub mod driver;
 
@@ -49,6 +49,6 @@ pub mod prelude {
     pub use crate::color::Color;
     pub use crate::driver::Ssd1680;
 
-    #[cfg(feature = "displays")]
+    #[cfg(feature = "graphics")]
     pub use crate::displays::{Display, DisplayRotation};
 }
