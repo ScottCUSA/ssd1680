@@ -3,10 +3,10 @@
 use crate::color::Color;
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
 
-/// 2.13in Tri-Color Black/White/Red
-pub mod display2in13;
 /// 2.9in Mono Black/White
-pub mod thinkink_2in9_mono;
+pub mod adafruit_thinkink_2in9_mono;
+/// 2.13in Tri-Color Black/White/Red
+pub mod weact_studio_2in13_tricolor;
 
 /// Generate a `new_display_driver` function that builds a SPI-backed driver
 /// for the current module using the module's `WIDTH`, `HEIGHT` and `INIT_SEQUENCE`.
