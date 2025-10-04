@@ -8,35 +8,24 @@ pub mod adafruit_thinkink_2in9;
 /// 2.13in Tri-Color Black/White/Red
 pub mod weact_studio_2in13;
 
-/// Generate a `new_display_driver` function that builds a SPI-backed driver
-/// for the current module using the module's `WIDTH`, `HEIGHT` and `INIT_SEQUENCE`.
-#[macro_export]
-macro_rules! make_new_display_driver {
-    () => {
-        /// Create a SPI-backed `Ssd1680` driver pre-configured for this panel.
-        pub fn new_display_driver<SPI, BSY, DC, RST>(
-            spi: SPI,
-            busy: BSY,
-            dc: DC,
-            rst: RST,
-        ) -> Result<driver::Ssd1680<SPI, BSY, DC, RST>, display_interface::DisplayError>
-        where
-            SPI: embedded_hal::spi::SpiDevice,
-            BSY: embedded_hal::digital::InputPin,
-            DC: embedded_hal::digital::OutputPin,
-            RST: embedded_hal::digital::OutputPin,
-        {
-            driver::Ssd1680::from_spi_with_init_sequence(
-                spi,
-                busy,
-                dc,
-                rst,
-                WIDTH,
-                HEIGHT,
-                INIT_SEQUENCE,
-            )
-        }
-    };
+/// Steps that a display-specific init sequence can contain.
+/// Keep variants minimal and serializable as static arrays in display modules.
+#[derive(Clone, Copy, Debug)]
+pub enum InitStep {
+    /// Perform a hardware reset (toggle RST pin)
+    SWReset,
+    /// Wait until the display indicates it's idle/busy line
+    DelayMs(u8),
+    /// Wait until the display indicates it's idle/busy line
+    WaitUntilIdle,
+    /// Send a bare command byte
+    Cmd(u8),
+    /// Send a command with a static data slice
+    CmdData(u8, &'static [u8]),
+    /// Send DRIVER_OUTPUT_CTRL with [height-1, 0x00, 0x00]
+    DriverControl,
+    /// Configure display to use the full frame (set ram area/counter)
+    UseFullFrame,
 }
 
 /// Necessary traits for all displays to implement for drawing
