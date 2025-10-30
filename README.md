@@ -12,20 +12,22 @@ controller, for use with [embedded-hal].
 This driver is written for a [WeAct Studio Epaper Module 2.13" Tri-Color][tricolor] display.
 It will probably work for other displays with the same chip.
 
-It is built using [embedded-hal] and optionally
-[embedded-graphics]. 
+It is built using [embedded-hal] and optionally [embedded-graphics]. 
 
 ## Examples
-* [ESP32-C3](https://github.com/mbv/esp32-ssd1680)
+* [ESP32-S2](https://github.com/ScottCUSA/magtag_esp_hal)
 
 ## Partial updates
-Partial updates is not supported. There was support initially but
-the driver refreshes the whole screen so there is no point.
+Partial updates are not currently supported.
+
+## Grayscale
+4 Color Grayscale is not currently supported.
 
 ## Credits
 
 * [Arduino Display Library for SPI E-Paper Displays](https://github.com/ZinggJM/GxEPD2)
 * [SSD1681 EPD driver](https://github.com/afajl/ssd1681)
+* [Waveshare EPD driver](https://github.com/caemor/epd-waveshare)
 
 ## License
 

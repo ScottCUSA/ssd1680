@@ -2,7 +2,8 @@
 
 #[cfg(feature = "graphics")]
 use embedded_graphics::pixelcolor::BinaryColor;
-
+// #[cfg(feature = "graphics")]
+// use embedded_graphics::pixelcolor::Gray2;
 #[cfg(feature = "graphics")]
 pub use BinaryColor::Off as Black;
 #[cfg(feature = "graphics")]

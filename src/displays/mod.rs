@@ -17,13 +17,11 @@ pub enum InitStep {
     /// Wait until the display indicates it's idle/busy line
     DelayMs(u8),
     /// Wait until the display indicates it's idle/busy line
-    WaitUntilIdle,
+    BusyWait,
     /// Send a bare command byte
     Cmd(u8),
     /// Send a command with a static data slice
     CmdData(u8, &'static [u8]),
-    /// Send DRIVER_OUTPUT_CTRL with [height-1, 0x00, 0x00]
-    DriverControl,
     /// Configure display to use the full frame (set ram area/counter)
     UseFullFrame,
 }
@@ -31,7 +29,7 @@ pub enum InitStep {
 /// Necessary traits for all displays to implement for drawing
 ///
 /// Adds support for:
-/// - Drawing (With tdeploywarselp of DrawTarget/Embedded Graphics)
+/// - Drawing (With the help of DrawTarget/Embedded Graphics)
 /// - Rotations
 /// - Clearing
 pub trait Display: DrawTarget {

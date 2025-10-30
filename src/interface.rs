@@ -90,11 +90,12 @@ where
     }
 
     /// Resets the device.
-    pub(crate) fn hard_reset(&mut self, delay: &mut impl DelayNs) {
+    pub(crate) fn hard_reset(&mut self, delay: &mut impl DelayNs) -> Result<(), DisplayError> {
         log::trace!("Resetting display");
-        self.rst.set_low().unwrap();
+        self.rst.set_low().map_err(|_| DisplayError::RSError)?;
         delay.delay_ms(RESET_DELAY_MS.into());
-        self.rst.set_high().unwrap();
+        self.rst.set_high().map_err(|_| DisplayError::RSError)?;
         delay.delay_ms(RESET_DELAY_MS.into());
+        Ok(())
     }
 }

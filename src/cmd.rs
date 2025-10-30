@@ -14,6 +14,7 @@ impl Cmd {
     pub const WRITE_BW_DATA: u8 = 0x24;
     pub const WRITE_RED_DATA: u8 = 0x26;
     pub const WRITE_VCOM_REG: u8 = 0x2C;
+    pub const WRITE_LUT_REG: u8 = 0x32;
     pub const BORDER_WAVEFORM_CTRL: u8 = 0x3C;
     pub const END_OPTION: u8 = 0x3F;
     pub const SET_RAMXPOS: u8 = 0x44;

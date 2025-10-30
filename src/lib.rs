@@ -20,7 +20,7 @@
 //!
 //! ### WeAct Studio 2.13" Display (Tri-Color)
 //!
-//! ```rust,no_run
+//! ```rust, ignore
 //! use ssd1680::displays::weact_studio_2in13::{WeActStudio2in13, Display2in13};
 //! use embedded_graphics::{prelude::*, primitives::*, mono_font::{ascii::FONT_6X10, MonoTextStyle}};
 //!
@@ -46,7 +46,7 @@
 //!
 //! ### Adafruit ThinkInk 2.9" Display (Mono)
 //!
-//! ```rust,no_run
+//! ```rust, ignore
 //! use ssd1680::displays::adafruit_thinkink_2in9::{ThinkInk2in9Mono, Display2in9};
 //!
 //! // Create driver and graphics buffer

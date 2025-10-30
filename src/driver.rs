@@ -17,11 +17,11 @@ pub trait Ssd1680Driver {
     /// Send red buffer
     fn update_red(&mut self, buffer: &[u8], delay: &mut impl DelayNs) -> Result<(), DisplayError>;
 
-    /// Send both black/white and red buffers to display
+    /// Send both low (bw) and high (red) buffers to display
     fn update(
         &mut self,
-        bw_buffer: &[u8],
-        red_buffer: &[u8],
+        low_buffer: &[u8],
+        high_buffer: &[u8],
         delay: &mut impl DelayNs,
     ) -> Result<(), DisplayError>;
 
