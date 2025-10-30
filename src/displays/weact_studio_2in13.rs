@@ -1,5 +1,5 @@
+use super::DisplayRotation;
 use super::{buffer_len, Display};
-use super::{DisplayRotation, InitStep};
 use crate::cmd::Cmd;
 use crate::color::Color;
 use crate::flag::Flag;
@@ -15,21 +15,6 @@ use log::debug;
 pub const WIDTH: u16 = 122;
 /// Display height for 2.13in panel
 pub const HEIGHT: u16 = 250;
-
-/// Init sequence for this panel
-pub const INIT_SEQUENCE: &[InitStep] = &[
-    InitStep::SWReset,
-    InitStep::BusyWait,
-    InitStep::CmdData(Cmd::DRIVER_OUTPUT_CTRL, &[0xFA, 0x00, 0x00]),
-    InitStep::CmdData(Cmd::DATA_ENTRY_MODE, &[Flag::DATA_ENTRY_INCRY_INCRX]),
-    InitStep::CmdData(
-        Cmd::BORDER_WAVEFORM_CTRL,
-        &[Flag::BORDER_WAVEFORM_FOLLOW_LUT | Flag::BORDER_WAVEFORM_LUT1],
-    ),
-    InitStep::CmdData(Cmd::TEMP_CONTROL, &[Flag::INTERNAL_TEMP_SENSOR]),
-    InitStep::CmdData(Cmd::DISPLAY_UPDATE_CTRL1, &[0x00, 0x80]),
-    InitStep::UseFullFrame,
-];
 
 /// Driver for a 250x122 panel (2.13in WeAct Studio)
 pub struct WeActStudio2in13<SPI, BSY, DC, RST>
@@ -161,31 +146,21 @@ where
         debug!("powering up display");
 
         self.interface.hard_reset(delay)?;
-
-        for step in INIT_SEQUENCE {
-            debug!("init step: {:?}", step);
-            match *step {
-                InitStep::SWReset => {
-                    self.interface.cmd(Cmd::SW_RESET)?;
-                }
-                InitStep::DelayMs(ms) => {
-                    delay.delay_ms(u32::from(ms));
-                }
-                InitStep::BusyWait => {
-                    self.interface.wait_until_idle(delay);
-                }
-                InitStep::Cmd(c) => {
-                    self.interface.cmd(c)?;
-                }
-                InitStep::CmdData(c, d) => {
-                    self.interface.cmd_with_data(c, d)?;
-                }
-                InitStep::UseFullFrame => {
-                    self.use_full_frame()?;
-                }
-            }
-        }
-
+        self.interface.cmd(Cmd::SW_RESET)?;
+        self.interface.wait_until_idle(delay);
+        self.interface
+            .cmd_with_data(Cmd::DRIVER_OUTPUT_CTRL, &[0xFA, 0x00, 0x00])?;
+        self.interface
+            .cmd_with_data(Cmd::DATA_ENTRY_MODE, &[Flag::DATA_ENTRY_INCRY_INCRX])?;
+        self.interface.cmd_with_data(
+            Cmd::BORDER_WAVEFORM_CTRL,
+            &[Flag::BORDER_WAVEFORM_FOLLOW_LUT | Flag::BORDER_WAVEFORM_LUT1],
+        )?;
+        self.interface
+            .cmd_with_data(Cmd::TEMP_CONTROL, &[Flag::INTERNAL_TEMP_SENSOR])?;
+        self.interface
+            .cmd_with_data(Cmd::DISPLAY_UPDATE_CTRL1, &[0x00, 0x80])?;
+        self.use_full_frame()?;
         self.interface.wait_until_idle(delay);
         Ok(())
     }

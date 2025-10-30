@@ -1,6 +1,6 @@
 [package]
 edition = "2024"
-name = "adafruit_magtag_esp_hal_epd"
+name = "adafruit_magtag_epd_bw"
 rust-version = "1.88"
 version = "0.1.0"
 

@@ -1,5 +1,5 @@
+use super::DisplayRotation;
 use super::{buffer_len, Display};
-use super::{DisplayRotation, InitStep};
 use crate::cmd::Cmd;
 use crate::color::Color;
 use crate::{driver::Ssd1680Driver, flag, interface::SpiDisplayInterface};
@@ -17,60 +17,6 @@ use log::debug;
 pub const WIDTH: u16 = 128;
 /// Display height for 2.9in display
 pub const HEIGHT: u16 = 296;
-
-/// Initialization sequence for the 2.9in panel mono full update
-pub const INIT_SEQUENCE_MONOFULL: &[InitStep] = &[
-    // Set Initialial Configuration
-    InitStep::SWReset,
-    InitStep::DelayMs(10),
-    // Send Initialization Code 0x01, 0x11, 0x44, 0x45, 0x3C
-    InitStep::CmdData(Cmd::DRIVER_OUTPUT_CTRL, &[0x27, 0x01, 0x00]),
-    InitStep::CmdData(Cmd::DATA_ENTRY_MODE, &[flag::Flag::DATA_ENTRY_INCRY_INCRX]),
-    InitStep::CmdData(Cmd::SET_RAMXPOS, &[0x00, 0x0F]),
-    InitStep::CmdData(Cmd::SET_RAMYPOS, &[0x00, 0x00, 0x27, 0x01]),
-    InitStep::CmdData(
-        Cmd::BORDER_WAVEFORM_CTRL,
-        &[flag::Flag::BORDER_WAVEFORM_FOLLOW_LUT | flag::Flag::BORDER_WAVEFORM_LUT1],
-    ),
-    // Load Waveform LUT
-    InitStep::CmdData(Cmd::TEMP_CONTROL, &[flag::Flag::INTERNAL_TEMP_SENSOR]),
-    InitStep::CmdData(Cmd::DISPLAY_UPDATE_CTRL1, &[0x00, 0x80]),
-    // InitStep::CmdData(Cmd::DISPLAY_UPDATE_CTRL2, &[0x20]), // load default LUT (default mono)
-    // Used for grayscale LUT (not yet implemented)
-    // load LUT into memory instead!
-    InitStep::CmdData(Cmd::END_OPTION, &[flag::Flag::END_OPTION_NORMAL]),
-    InitStep::CmdData(Cmd::GATE_VOLTAGE_CTRL, &[0x17]),
-    InitStep::CmdData(Cmd::SOURCE_VOLTAGE_CTRL, &[0x41, 0x00, 0x32]),
-    InitStep::CmdData(Cmd::WRITE_VCOM_REG, &[0x36]),
-    InitStep::CmdData(Cmd::WRITE_LUT_REG, &TI_290_MONOFULL_LUT_CODE),
-];
-
-/// Initialization sequence for the 2.9in panel 2-bit grayscale
-pub const INIT_SEQUENCE_GRAY2: &[InitStep] = &[
-    // Set Initialial Configuration
-    InitStep::SWReset,
-    InitStep::DelayMs(10),
-    // Send Initialization Code 0x01, 0x11, 0x44, 0x45, 0x3C
-    InitStep::CmdData(Cmd::DRIVER_OUTPUT_CTRL, &[0x27, 0x01, 0x00]),
-    InitStep::CmdData(Cmd::DATA_ENTRY_MODE, &[flag::Flag::DATA_ENTRY_INCRY_INCRX]),
-    InitStep::CmdData(Cmd::SET_RAMXPOS, &[0x00, 0x0F]),
-    InitStep::CmdData(Cmd::SET_RAMYPOS, &[0x00, 0x00, 0x27, 0x01]),
-    InitStep::CmdData(
-        Cmd::BORDER_WAVEFORM_CTRL,
-        &[flag::Flag::BORDER_WAVEFORM_FOLLOW_LUT | flag::Flag::BORDER_WAVEFORM_LUT1],
-    ),
-    // Load Waveform LUT
-    InitStep::CmdData(Cmd::TEMP_CONTROL, &[flag::Flag::INTERNAL_TEMP_SENSOR]),
-    InitStep::CmdData(Cmd::DISPLAY_UPDATE_CTRL1, &[0x00, 0x80]),
-    // InitStep::CmdData(Cmd::DISPLAY_UPDATE_CTRL2, &[0x20]), // load default LUT (default mono)
-    // Used for grayscale LUT (not yet implemented)
-    // load LUT into memory instead!
-    InitStep::CmdData(Cmd::END_OPTION, &[flag::Flag::END_OPTION_NORMAL]),
-    InitStep::CmdData(Cmd::GATE_VOLTAGE_CTRL, &[0x17]),
-    InitStep::CmdData(Cmd::SOURCE_VOLTAGE_CTRL, &[0x41, 0x00, 0x32]),
-    InitStep::CmdData(Cmd::WRITE_VCOM_REG, &[0x36]),
-    InitStep::CmdData(Cmd::WRITE_LUT_REG, &TI_290MFGN_GRAY2_LUT_CODE),
-];
 
 #[rustfmt::skip]
 /// Adafruit ThinkInk 290 EA4MFGN MONO FULL LUT CODE Cmd: 0x32 Size: 0x99,
@@ -197,35 +143,6 @@ where
         self.sleep(delay)
     }
 
-    fn use_full_frame(&mut self) -> Result<(), DisplayError> {
-        self.set_ram_area(0, 0, WIDTH - 1, HEIGHT - 1)?;
-        self.set_ram_counter(0, 0)
-    }
-
-    fn set_ram_area(
-        &mut self,
-        start_x: u16,
-        start_y: u16,
-        end_x: u16,
-        end_y: u16,
-    ) -> Result<(), DisplayError> {
-        self.interface.cmd_with_data(
-            Cmd::SET_RAMXPOS,
-            &[(start_x >> 3) as u8, (end_x >> 3) as u8],
-        )?;
-
-        self.interface.cmd_with_data(
-            Cmd::SET_RAMYPOS,
-            &[
-                (start_y & 0xFF) as u8,
-                ((start_y >> 8) & 0x01) as u8,
-                (end_y & 0xFF) as u8,
-                ((end_y >> 8) & 0x01) as u8,
-            ],
-        )?;
-        Ok(())
-    }
-
     fn set_ram_counter(&mut self, x: u32, y: u32) -> Result<(), DisplayError> {
         self.interface
             .cmd_with_data(Cmd::SET_RAMX_COUNTER, &[(x >> 3) as u8])?;
@@ -246,35 +163,40 @@ where
     RST: OutputPin,
 {
     fn init(&mut self, delay: &mut impl DelayNs) -> Result<(), DisplayError> {
-        debug!("powering up ThinkInk 2.9\" display");
-
+        debug!("powering up ThinkInk 2.9in mono display");
         // hard reset
         self.interface.hard_reset(delay)?;
-
-        for step in INIT_SEQUENCE_MONOFULL {
-            debug!("init step: {:?}", step);
-            match *step {
-                InitStep::SWReset => {
-                    self.interface.cmd(Cmd::SW_RESET)?;
-                }
-                InitStep::DelayMs(ms) => {
-                    delay.delay_ms(u32::from(ms));
-                }
-                InitStep::BusyWait => {
-                    self.interface.wait_until_idle(delay);
-                }
-                InitStep::Cmd(c) => {
-                    self.interface.cmd(c)?;
-                }
-                InitStep::CmdData(c, d) => {
-                    self.interface.cmd_with_data(c, d)?;
-                }
-                InitStep::UseFullFrame => {
-                    self.use_full_frame()?;
-                }
-            }
-        }
-
+        // Set Initialial Configuration
+        self.interface.cmd(Cmd::SW_RESET)?;
+        delay.delay_ms(10);
+        // Send Initialization Code 0x01, 0x11, 0x44, 0x45, 0x3C
+        self.interface
+            .cmd_with_data(Cmd::DRIVER_OUTPUT_CTRL, &[0x27, 0x01, 0x00])?;
+        self.interface
+            .cmd_with_data(Cmd::DATA_ENTRY_MODE, &[flag::Flag::DATA_ENTRY_INCRY_INCRX])?;
+        self.interface
+            .cmd_with_data(Cmd::SET_RAMXPOS, &[0x00, 0x0F])?;
+        self.interface
+            .cmd_with_data(Cmd::SET_RAMYPOS, &[0x00, 0x00, 0x27, 0x01])?;
+        self.interface.cmd_with_data(
+            Cmd::BORDER_WAVEFORM_CTRL,
+            &[flag::Flag::BORDER_WAVEFORM_FOLLOW_LUT | flag::Flag::BORDER_WAVEFORM_LUT1],
+        )?;
+        // Load Waveform LUT
+        self.interface
+            .cmd_with_data(Cmd::TEMP_CONTROL, &[flag::Flag::INTERNAL_TEMP_SENSOR])?;
+        self.interface
+            .cmd_with_data(Cmd::DISPLAY_UPDATE_CTRL1, &[0x00, 0x80])?;
+        self.interface
+            .cmd_with_data(Cmd::END_OPTION, &[flag::Flag::END_OPTION_NORMAL])?;
+        self.interface
+            .cmd_with_data(Cmd::GATE_VOLTAGE_CTRL, &[0x17])?;
+        self.interface
+            .cmd_with_data(Cmd::SOURCE_VOLTAGE_CTRL, &[0x41, 0x00, 0x32])?;
+        self.interface.cmd_with_data(Cmd::WRITE_VCOM_REG, &[0x36])?;
+        // load LUT into memory
+        self.interface
+            .cmd_with_data(Cmd::WRITE_LUT_REG, &TI_290_MONOFULL_LUT_CODE)?;
         self.interface.wait_until_idle(delay);
         Ok(())
     }
@@ -411,35 +333,6 @@ where
         self.sleep(delay)
     }
 
-    fn use_full_frame(&mut self) -> Result<(), DisplayError> {
-        self.set_ram_area(0, 0, WIDTH - 1, HEIGHT - 1)?;
-        self.set_ram_counter(0, 0)
-    }
-
-    fn set_ram_area(
-        &mut self,
-        start_x: u16,
-        start_y: u16,
-        end_x: u16,
-        end_y: u16,
-    ) -> Result<(), DisplayError> {
-        self.interface.cmd_with_data(
-            Cmd::SET_RAMXPOS,
-            &[(start_x >> 3) as u8, (end_x >> 3) as u8],
-        )?;
-
-        self.interface.cmd_with_data(
-            Cmd::SET_RAMYPOS,
-            &[
-                (start_y & 0xFF) as u8,
-                ((start_y >> 8) & 0x01) as u8,
-                (end_y & 0xFF) as u8,
-                ((end_y >> 8) & 0x01) as u8,
-            ],
-        )?;
-        Ok(())
-    }
-
     fn set_ram_counter(&mut self, x: u32, y: u32) -> Result<(), DisplayError> {
         self.interface
             .cmd_with_data(Cmd::SET_RAMX_COUNTER, &[(x >> 3) as u8])?;
@@ -460,35 +353,39 @@ where
     RST: OutputPin,
 {
     fn init(&mut self, delay: &mut impl DelayNs) -> Result<(), DisplayError> {
-        debug!("powering up ThinkInk 2.9\" grayscale display");
-
+        debug!("powering up ThinkInk 2.9in grayscale display");
         // hard reset
         self.interface.hard_reset(delay)?;
-
-        for step in INIT_SEQUENCE_GRAY2 {
-            debug!("init step: {:?}", step);
-            match *step {
-                InitStep::SWReset => {
-                    self.interface.cmd(Cmd::SW_RESET)?;
-                }
-                InitStep::DelayMs(ms) => {
-                    delay.delay_ms(u32::from(ms));
-                }
-                InitStep::BusyWait => {
-                    self.interface.wait_until_idle(delay);
-                }
-                InitStep::Cmd(c) => {
-                    self.interface.cmd(c)?;
-                }
-                InitStep::CmdData(c, d) => {
-                    self.interface.cmd_with_data(c, d)?;
-                }
-                InitStep::UseFullFrame => {
-                    self.use_full_frame()?;
-                }
-            }
-        }
-
+        self.interface.cmd(Cmd::SW_RESET)?;
+        delay.delay_ms(10);
+        // Send Initialization Code 0x01, 0x11, 0x44, 0x45, 0x3C
+        self.interface
+            .cmd_with_data(Cmd::DRIVER_OUTPUT_CTRL, &[0x27, 0x01, 0x00])?;
+        self.interface
+            .cmd_with_data(Cmd::DATA_ENTRY_MODE, &[flag::Flag::DATA_ENTRY_INCRY_INCRX])?;
+        self.interface
+            .cmd_with_data(Cmd::SET_RAMXPOS, &[0x00, 0x0F])?;
+        self.interface
+            .cmd_with_data(Cmd::SET_RAMYPOS, &[0x00, 0x00, 0x27, 0x01])?;
+        self.interface.cmd_with_data(
+            Cmd::BORDER_WAVEFORM_CTRL,
+            &[flag::Flag::BORDER_WAVEFORM_FOLLOW_LUT | flag::Flag::BORDER_WAVEFORM_LUT1],
+        )?;
+        // Load Waveform LUT
+        self.interface
+            .cmd_with_data(Cmd::TEMP_CONTROL, &[flag::Flag::INTERNAL_TEMP_SENSOR])?;
+        self.interface
+            .cmd_with_data(Cmd::DISPLAY_UPDATE_CTRL1, &[0x00, 0x80])?;
+        self.interface
+            .cmd_with_data(Cmd::END_OPTION, &[flag::Flag::END_OPTION_NORMAL])?;
+        self.interface
+            .cmd_with_data(Cmd::GATE_VOLTAGE_CTRL, &[0x17])?;
+        self.interface
+            .cmd_with_data(Cmd::SOURCE_VOLTAGE_CTRL, &[0x41, 0x00, 0x32])?;
+        self.interface.cmd_with_data(Cmd::WRITE_VCOM_REG, &[0x36])?;
+        // write LUT into memory
+        self.interface
+            .cmd_with_data(Cmd::WRITE_LUT_REG, &TI_290MFGN_GRAY2_LUT_CODE)?;
         self.interface.wait_until_idle(delay);
         Ok(())
     }

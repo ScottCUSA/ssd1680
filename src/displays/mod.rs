@@ -8,24 +8,6 @@ pub mod adafruit_thinkink_2in9;
 /// 2.13in Tri-Color Black/White/Red
 pub mod weact_studio_2in13;
 
-/// Steps that a display-specific init sequence can contain.
-/// Keep variants minimal and serializable as static arrays in display modules.
-#[derive(Clone, Copy, Debug)]
-pub enum InitStep {
-    /// Perform a hardware reset (toggle RST pin)
-    SWReset,
-    /// Wait until the display indicates it's idle/busy line
-    DelayMs(u8),
-    /// Wait until the display indicates it's idle/busy line
-    BusyWait,
-    /// Send a bare command byte
-    Cmd(u8),
-    /// Send a command with a static data slice
-    CmdData(u8, &'static [u8]),
-    /// Configure display to use the full frame (set ram area/counter)
-    UseFullFrame,
-}
-
 /// Necessary traits for all displays to implement for drawing
 ///
 /// Adds support for:
